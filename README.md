@@ -2,6 +2,8 @@
 
 [![NPM](https://nodei.co/npm/disk-action.png?compact=true)](https://nodei.co/npm/disk-action/)
 
+Easy to use module in order to create / delete / modify files and directory.
+All unexistent directories will be create 'on-the-fly', and delete works for either file or directory. ** BE CAREFUL ** when specifying directory: all content will be erased !!
 
 ## Install
 
