@@ -1,5 +1,3 @@
-_ = require 'lodash'
-
 path = require 'path'
 fs = require 'xfs'
 mv = require 'node-mv'
