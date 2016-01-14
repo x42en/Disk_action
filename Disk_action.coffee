@@ -22,36 +22,37 @@ replace = require 'replace'
 module.exports = class Disk_action
 	constructor: () ->
 
-	write: ({filename, dirname, content, cb}={}) =>
-		if cb?
-			if content? and filename?
-				fs.exists "#{filename}", (exists) =>
-					unless exists
-						if filename.indexOf '/' > -1
-							pathname = path.dirname filename
-							fs.mkdir "#{pathname}", (err) =>
-								if err?
-									cb err
-								else
-									fs.writeFile "#{filename}", content, (err) =>
-										cb err
-						else
-							fs.writeFile "#{filename}", content, (err) =>
+	write: ({filename, dirname, content, cb}) =>
+		unless cb?
+			cb = console.error()
+		if content? and filename?
+			fs.exists "#{filename}", (exists) =>
+				unless exists
+					if filename.indexOf '/' > -1
+						pathname = path.dirname filename
+						fs.mkdir "#{pathname}", (err) =>
+							if err?
 								cb err
+							else
+								fs.writeFile "#{filename}", content, (err) =>
+									cb err
 					else
 						fs.writeFile "#{filename}", content, (err) =>
 							cb err
-			else if dirname?
-				fs.exists "#{dirname}", (exists) =>
-					unless exists
-						fs.mkdir "#{dirname}", (err) =>
-							cb err
-			else
-				cb 'NOTYPE'
+				else
+					fs.writeFile "#{filename}", content, (err) =>
+						cb err
+		else if dirname?
+			fs.exists "#{dirname}", (exists) =>
+				unless exists
+					fs.mkdir "#{dirname}", (err) =>
+						cb err
 		else
-			console.error 'NOARGS'
+			cb 'NOTYPE'
 				
-	append: ({filename, content, cb}={}) =>
+	append: ({filename, content, cb}) =>
+		unless cb?
+			cb = console.error()
 		if filename? and content? and cb?
 			fs.exists "#{filename}", (exists) =>
 				if exists and fs.lstatSync(filename).isFile()
@@ -62,7 +63,9 @@ module.exports = class Disk_action
 		else
 			cb 'NOARGS'
 	
-	copy: ({source, destination, cb}={}) =>
+	copy: ({source, destination, cb}) =>
+		unless cb?
+			cb = console.error()
 		if source? and destination?
 			fs.exists "#{source}", (exists) =>
 				if exists
@@ -81,6 +84,8 @@ module.exports = class Disk_action
 			cb 'Undefined source and/or destination'
 
 	move: ({source, destination, mkdirp, clobber, cb}) =>
+		unless cb?
+			cb = console.error()
 		# auto create recursive destination files
 		unless mkdirp?
 			mkdirp = true
@@ -97,9 +102,12 @@ module.exports = class Disk_action
 					cb 'Invalid destination'
 		else
 			cb 'Undefined source and/or destination'
+		
 
-	replace: ({filename, to_replace, replace_with, cb}={}) =>
-		if filename? and to_replace? and cb?
+	replace: ({filename, to_replace, replace_with, cb}) =>
+		unless cb?
+			cb = console.error()
+		if filename? and to_replace?
 			fs.exists "#{filename}", (exists) =>
 				if exists and fs.lstatSync(filename).isFile()
 					replace
@@ -111,8 +119,10 @@ module.exports = class Disk_action
 			# We don't care about what's going on, as there is no callback on replace
 			cb()
 
-	delete: ({filename, cb}={}) =>
-		if filename? and cb?
+	delete: ({filename, cb}) =>
+		unless cb?
+			cb = console.error()
+		if filename?
 			fs.exists "#{filename}", (exists) =>
 				if exists
 					if fs.lstatSync(filename).isDirectory()
@@ -125,4 +135,5 @@ module.exports = class Disk_action
 					cb null
 		else
 			cb 'NOARGS'
+		
 
