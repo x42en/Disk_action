@@ -23,7 +23,7 @@ module.exports = class Disk_action
 	constructor: () ->
 
 	write: ({filename, dirname, content, cb}) =>
-		unless cb
+		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if content? and filename?
 			fs.exists "#{filename}", (exists) =>
@@ -51,7 +51,7 @@ module.exports = class Disk_action
 			cb 'NOTYPE'
 				
 	append: ({filename, content, cb}) =>
-		unless cb
+		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if filename? and content? and cb?
 			fs.exists "#{filename}", (exists) =>
@@ -64,7 +64,7 @@ module.exports = class Disk_action
 			cb 'NOARGS'
 	
 	copy: ({source, destination, cb}) =>
-		unless cb
+		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if source? and destination?
 			fs.exists "#{source}", (exists) =>
@@ -84,7 +84,7 @@ module.exports = class Disk_action
 			cb 'Undefined source and/or destination'
 
 	move: ({source, destination, mkdirp, clobber, cb}) =>
-		unless cb
+		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		# auto create recursive destination files
 		unless mkdirp?
@@ -105,7 +105,7 @@ module.exports = class Disk_action
 		
 
 	replace: ({filename, to_replace, replace_with, cb}) =>
-		unless cb
+		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if filename? and to_replace?
 			fs.exists "#{filename}", (exists) =>
@@ -120,7 +120,7 @@ module.exports = class Disk_action
 			cb()
 
 	delete: ({filename, cb}) =>
-		unless cb
+		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if filename?
 			fs.exists "#{filename}", (exists) =>
