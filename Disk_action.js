@@ -1,5 +1,5 @@
 /****************************************************/
-/*         Disk_action - v0.1.1                     */
+/*         Disk_action - v0.1.2                     */
 /*                                                  */
 /*    Easily interact with FILE SYSTEM in node.j    */
 /****************************************************/
@@ -36,7 +36,7 @@
     Disk_action.prototype.write = function(_arg) {
       var cb, content, dirname, filename;
       filename = _arg.filename, dirname = _arg.dirname, content = _arg.content, cb = _arg.cb;
-      if (cb == null) {
+      if (!cb) {
         cb = console.error();
       }
       if ((content != null) && (filename != null)) {
@@ -85,7 +85,7 @@
     Disk_action.prototype.append = function(_arg) {
       var cb, content, filename;
       filename = _arg.filename, content = _arg.content, cb = _arg.cb;
-      if (cb == null) {
+      if (!cb) {
         cb = console.error();
       }
       if ((filename != null) && (content != null) && (cb != null)) {
@@ -108,7 +108,7 @@
     Disk_action.prototype.copy = function(_arg) {
       var cb, destination, source;
       source = _arg.source, destination = _arg.destination, cb = _arg.cb;
-      if (cb == null) {
+      if (!cb) {
         cb = console.error();
       }
       if ((source != null) && (destination != null)) {
@@ -138,7 +138,7 @@
     Disk_action.prototype.move = function(_arg) {
       var cb, clobber, destination, mkdirp, source;
       source = _arg.source, destination = _arg.destination, mkdirp = _arg.mkdirp, clobber = _arg.clobber, cb = _arg.cb;
-      if (cb == null) {
+      if (!cb) {
         cb = console.error();
       }
       if (mkdirp == null) {
@@ -170,7 +170,7 @@
     Disk_action.prototype.replace = function(_arg) {
       var cb, filename, replace_with, to_replace;
       filename = _arg.filename, to_replace = _arg.to_replace, replace_with = _arg.replace_with, cb = _arg.cb;
-      if (cb == null) {
+      if (!cb) {
         cb = console.error();
       }
       if ((filename != null) && (to_replace != null)) {
@@ -194,7 +194,7 @@
     Disk_action.prototype["delete"] = function(_arg) {
       var cb, filename;
       filename = _arg.filename, cb = _arg.cb;
-      if (cb == null) {
+      if (!cb) {
         cb = console.error();
       }
       if (filename != null) {
