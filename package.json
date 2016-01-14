@@ -1,6 +1,6 @@
 {
   "name": "disk-action",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Implement standard disk actions",
   "main": "Disk_action.js",
   "scripts": {
