@@ -15,75 +15,84 @@
 # limitations under the License.
 
 path = require 'path'
-fs = require 'xfs'
+xfs = require 'xfs'
+fs = require('fs')
 mv = require 'node-mv'
 replace = require 'replace'
+
+module.exports = fs.existsSync or (filePath) ->
+  try
+    fs.statSync filePath
+  catch err
+    if err.code == 'ENOENT'
+      return false
+  true
 
 module.exports = class Disk_action
 	constructor: () ->
 
-	write: ({filename, dirname, content, cb}) =>
+	write: ({filename, dirname, content, cb}) ->
 		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if content? and filename?
-			fs.exists "#{filename}", (exists) =>
-				unless exists
-					if filename.indexOf '/' > -1
-						pathname = path.dirname filename
-						fs.mkdir "#{pathname}", (err) =>
-							if err?
-								cb err
-							else
-								fs.writeFile "#{filename}", content, (err) =>
-									cb err
-					else
-						fs.writeFile "#{filename}", content, (err) =>
+			if fs.existsSync "#{filename}"
+				if filename.indexOf '/' > -1
+					pathname = path.dirname filename
+					xfs.mkdir "#{pathname}", (err) =>
+						if err?
 							cb err
+						else
+							xfs.writeFile "#{filename}", content, (err) =>
+								cb err
 				else
-					fs.writeFile "#{filename}", content, (err) =>
+					xfs.writeFile "#{filename}", content, (err) =>
 						cb err
+			else
+				xfs.writeFile "#{filename}", content, (err) =>
+					cb err
 		else if dirname?
-			fs.exists "#{dirname}", (exists) =>
-				unless exists
-					fs.mkdir "#{dirname}", (err) =>
-						cb err
+			if fs.existsSync "#{dirname}"
+				fs.mkdir "#{dirname}", (err) =>
+					cb err
+			# If directory exists do nothing
 		else
 			cb 'NOTYPE'
 				
-	append: ({filename, content, cb}) =>
+	append: ({filename, content, cb}) ->
 		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if filename? and content? and cb?
-			fs.exists "#{filename}", (exists) =>
-				if exists and fs.lstatSync(filename).isFile()
+			if fs.existsSync "#{filename}"
+				if fs.lstatSync(filename).isFile()
 					fs.appendFile "#{filename}", "#{content}", (err) =>
 						cb err
 				else
-					cb 'NOFILE'
+					cb 'DIREXISTS'
+			else
+				cb 'NOFILE'
 		else
 			cb 'NOARGS'
 	
-	copy: ({source, destination, cb}) =>
+	copy: ({source, destination, cb}) ->
 		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if source? and destination?
-			fs.exists "#{source}", (exists) =>
-				if exists
-					if fs.lstatSync(source).isFile()
-						fs.createReadStream(source).pipe(fs.createWriteStream(destination))
-						cb()
-					else
-						cb 'Invalid destination'
-				# if file source does not exists, just write blank dest file
+			if fs.existsSync "#{source}"
+				if fs.lstatSync(source).isFile()
+					fs.createReadStream(source).pipe(fs.createWriteStream(destination))
+					cb()
 				else
-					@write
-						filename: destination
-						content: ''
-						cb: cb
+					cb 'DIREXISTS'
+			# if file source does not exists, just write blank dest file
+			else
+				@write
+					filename: destination
+					content: ''
+					cb: cb
 		else
-			cb 'Undefined source and/or destination'
+			cb 'NOARGS'
 
-	move: ({source, destination, mkdirp, clobber, cb}) =>
+	move: ({source, destination, mkdirp, clobber, cb}) ->
 		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		# auto create recursive destination files
@@ -94,45 +103,50 @@ module.exports = class Disk_action
 			clobber = true
 
 		if source? and destination?
-			fs.exists "#{source}", (exists) =>
-				if exists and fs.lstatSync(source).isFile()
+			if fs.existsSync "#{source}"
+				if fs.lstatSync(source).isFile()
 					mv 'source/file', 'dest/file', {mkdirp: mkdirp, clobber: clobber}, (err) =>
 						cb err
 				else
-					cb 'Invalid destination'
+					cb 'DIREXISTS'
+			else
+				cb 'NOFILE'
 		else
-			cb 'Undefined source and/or destination'
+			cb 'NOARGS'
 		
 
-	replace: ({filename, to_replace, replace_with, cb}) =>
+	replace: ({filename, to_replace, replace_with, cb}) ->
 		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if filename? and to_replace?
-			fs.exists "#{filename}", (exists) =>
-				if exists and fs.lstatSync(filename).isFile()
+			if fs.existsSync "#{filename}"
+				if fs.lstatSync(filename).isFile()
 					replace
 						regex: to_replace
 						replacement: replace_with
 						paths: [ filename ]
 						recursive: true
 						silent: true
+				else
+					cb 'DIREXISTS'
 			# We don't care about what's going on, as there is no callback on replace
 			cb()
+		else
+			cb 'NOARGS'
 
-	delete: ({filename, cb}) =>
+	delete: ({filename, cb}) ->
 		if not cb? or typeof cb is "undefined"
 			cb = console.error()
 		if filename?
-			fs.exists "#{filename}", (exists) =>
-				if exists
-					if fs.lstatSync(filename).isDirectory()
-						fs.rmdir filename, (err) =>
-							cb err
-					else
-						fs.unlink filename, (err) =>
-							cb err
+			if fs.existsSync "#{filename}"
+				if fs.lstatSync(filename).isDirectory()
+					fs.rmdir filename, (err) =>
+						cb err
 				else
-					cb null
+					fs.unlink filename, (err) =>
+						cb err
+			else
+				cb null
 		else
 			cb 'NOARGS'
 		

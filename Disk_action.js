@@ -1,5 +1,5 @@
 /****************************************************/
-/*         Disk_action - v0.1.3                     */
+/*         Disk_action - v0.1.4                     */
 /*                                                  */
 /*    Easily interact with FILE SYSTEM in node.j    */
 /****************************************************/
@@ -12,71 +12,77 @@
 /****************************************************/
 
 (function() {
-  var Disk_action, fs, mv, path, replace,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var Disk_action, fs, mv, path, replace, xfs;
 
   path = require('path');
 
-  fs = require('xfs');
+  xfs = require('xfs');
+
+  fs = require('fs');
 
   mv = require('node-mv');
 
   replace = require('replace');
 
-  module.exports = Disk_action = (function() {
-    function Disk_action() {
-      this["delete"] = __bind(this["delete"], this);
-      this.replace = __bind(this.replace, this);
-      this.move = __bind(this.move, this);
-      this.copy = __bind(this.copy, this);
-      this.append = __bind(this.append, this);
-      this.write = __bind(this.write, this);
+  module.exports = fs.existsSync || function(filePath) {
+    var err;
+    try {
+      fs.statSync(filePath);
+    } catch (_error) {
+      err = _error;
+      if (err.code === 'ENOENT') {
+        return false;
+      }
     }
+    return true;
+  };
+
+  module.exports = Disk_action = (function() {
+    function Disk_action() {}
 
     Disk_action.prototype.write = function(_arg) {
-      var cb, content, dirname, filename;
+      var cb, content, dirname, filename, pathname;
       filename = _arg.filename, dirname = _arg.dirname, content = _arg.content, cb = _arg.cb;
       if ((cb == null) || typeof cb === "undefined") {
         cb = console.error();
       }
       if ((content != null) && (filename != null)) {
-        return fs.exists("" + filename, (function(_this) {
-          return function(exists) {
-            var pathname;
-            if (!exists) {
-              if (filename.indexOf('/' > -1)) {
-                pathname = path.dirname(filename);
-                return fs.mkdir("" + pathname, function(err) {
-                  if (err != null) {
-                    return cb(err);
-                  } else {
-                    return fs.writeFile("" + filename, content, function(err) {
-                      return cb(err);
-                    });
-                  }
-                });
-              } else {
-                return fs.writeFile("" + filename, content, function(err) {
+        if (fs.existsSync("" + filename)) {
+          if (filename.indexOf('/' > -1)) {
+            pathname = path.dirname(filename);
+            return xfs.mkdir("" + pathname, (function(_this) {
+              return function(err) {
+                if (err != null) {
                   return cb(err);
-                });
-              }
-            } else {
-              return fs.writeFile("" + filename, content, function(err) {
+                } else {
+                  return xfs.writeFile("" + filename, content, function(err) {
+                    return cb(err);
+                  });
+                }
+              };
+            })(this));
+          } else {
+            return xfs.writeFile("" + filename, content, (function(_this) {
+              return function(err) {
                 return cb(err);
-              });
-            }
-          };
-        })(this));
+              };
+            })(this));
+          }
+        } else {
+          return xfs.writeFile("" + filename, content, (function(_this) {
+            return function(err) {
+              return cb(err);
+            };
+          })(this));
+        }
       } else if (dirname != null) {
-        return fs.exists("" + dirname, (function(_this) {
-          return function(exists) {
-            if (!exists) {
-              return fs.mkdir("" + dirname, function(err) {
-                return cb(err);
-              });
-            }
-          };
-        })(this));
+        if (fs.existsSync("" + dirname)) {
+          return fs.mkdir("" + dirname, (function(_this) {
+            return function(err) {
+              return cb(err);
+            };
+          })(this));
+        }
       } else {
         return cb('NOTYPE');
       }
@@ -89,17 +95,19 @@
         cb = console.error();
       }
       if ((filename != null) && (content != null) && (cb != null)) {
-        return fs.exists("" + filename, (function(_this) {
-          return function(exists) {
-            if (exists && fs.lstatSync(filename).isFile()) {
-              return fs.appendFile("" + filename, "" + content, function(err) {
+        if (fs.existsSync("" + filename)) {
+          if (fs.lstatSync(filename).isFile()) {
+            return fs.appendFile("" + filename, "" + content, (function(_this) {
+              return function(err) {
                 return cb(err);
-              });
-            } else {
-              return cb('NOFILE');
-            }
-          };
-        })(this));
+              };
+            })(this));
+          } else {
+            return cb('DIREXISTS');
+          }
+        } else {
+          return cb('NOFILE');
+        }
       } else {
         return cb('NOARGS');
       }
@@ -112,26 +120,22 @@
         cb = console.error();
       }
       if ((source != null) && (destination != null)) {
-        return fs.exists("" + source, (function(_this) {
-          return function(exists) {
-            if (exists) {
-              if (fs.lstatSync(source).isFile()) {
-                fs.createReadStream(source).pipe(fs.createWriteStream(destination));
-                return cb();
-              } else {
-                return cb('Invalid destination');
-              }
-            } else {
-              return _this.write({
-                filename: destination,
-                content: '',
-                cb: cb
-              });
-            }
-          };
-        })(this));
+        if (fs.existsSync("" + source)) {
+          if (fs.lstatSync(source).isFile()) {
+            fs.createReadStream(source).pipe(fs.createWriteStream(destination));
+            return cb();
+          } else {
+            return cb('DIREXISTS');
+          }
+        } else {
+          return this.write({
+            filename: destination,
+            content: '',
+            cb: cb
+          });
+        }
       } else {
-        return cb('Undefined source and/or destination');
+        return cb('NOARGS');
       }
     };
 
@@ -148,22 +152,24 @@
         clobber = true;
       }
       if ((source != null) && (destination != null)) {
-        return fs.exists("" + source, (function(_this) {
-          return function(exists) {
-            if (exists && fs.lstatSync(source).isFile()) {
-              return mv('source/file', 'dest/file', {
-                mkdirp: mkdirp,
-                clobber: clobber
-              }, function(err) {
+        if (fs.existsSync("" + source)) {
+          if (fs.lstatSync(source).isFile()) {
+            return mv('source/file', 'dest/file', {
+              mkdirp: mkdirp,
+              clobber: clobber
+            }, (function(_this) {
+              return function(err) {
                 return cb(err);
-              });
-            } else {
-              return cb('Invalid destination');
-            }
-          };
-        })(this));
+              };
+            })(this));
+          } else {
+            return cb('DIREXISTS');
+          }
+        } else {
+          return cb('NOFILE');
+        }
       } else {
-        return cb('Undefined source and/or destination');
+        return cb('NOARGS');
       }
     };
 
@@ -174,20 +180,22 @@
         cb = console.error();
       }
       if ((filename != null) && (to_replace != null)) {
-        fs.exists("" + filename, (function(_this) {
-          return function(exists) {
-            if (exists && fs.lstatSync(filename).isFile()) {
-              return replace({
-                regex: to_replace,
-                replacement: replace_with,
-                paths: [filename],
-                recursive: true,
-                silent: true
-              });
-            }
-          };
-        })(this));
+        if (fs.existsSync("" + filename)) {
+          if (fs.lstatSync(filename).isFile()) {
+            replace({
+              regex: to_replace,
+              replacement: replace_with,
+              paths: [filename],
+              recursive: true,
+              silent: true
+            });
+          } else {
+            cb('DIREXISTS');
+          }
+        }
         return cb();
+      } else {
+        return cb('NOARGS');
       }
     };
 
@@ -198,23 +206,23 @@
         cb = console.error();
       }
       if (filename != null) {
-        return fs.exists("" + filename, (function(_this) {
-          return function(exists) {
-            if (exists) {
-              if (fs.lstatSync(filename).isDirectory()) {
-                return fs.rmdir(filename, function(err) {
-                  return cb(err);
-                });
-              } else {
-                return fs.unlink(filename, function(err) {
-                  return cb(err);
-                });
-              }
-            } else {
-              return cb(null);
-            }
-          };
-        })(this));
+        if (fs.existsSync("" + filename)) {
+          if (fs.lstatSync(filename).isDirectory()) {
+            return fs.rmdir(filename, (function(_this) {
+              return function(err) {
+                return cb(err);
+              };
+            })(this));
+          } else {
+            return fs.unlink(filename, (function(_this) {
+              return function(err) {
+                return cb(err);
+              };
+            })(this));
+          }
+        } else {
+          return cb(null);
+        }
       } else {
         return cb('NOARGS');
       }
