@@ -13,6 +13,8 @@
   "keywords": [
     "CoffeeScript",
     "disk",
+    "read",
+    "create",
     "write",
     "move",
     "delete",
@@ -20,7 +22,7 @@
     "class"
   ],
   "author": "Ben Mz",
-  "license": "Apache v2.0",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/x42en/Disk_action/issues"
   },

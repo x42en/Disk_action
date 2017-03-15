@@ -30,7 +30,7 @@ module.exports = class Disk_action
     constructor: (@encoding = 'utf-8') ->
 
     # Read a file
-    read: ({filename, cb}) ->
+    read: ({filename, cb}={}) ->
         unless filename
             throw 'Error: filename is not set'
 
@@ -47,20 +47,27 @@ module.exports = class Disk_action
                 cb data
 
     # Create empty file
-    touch: ({filename}) ->
+    touch: ({filename}={}) ->
         unless filename
             throw 'Error: filename is not set'
         
         @_create
             filename: filename
             content: null
+            ,(data) ->
+                if typeof cb is "function"
+                    cb data
 
     # Backward compatibility
-    write: ({filename, dirname, content, cb}) ->
-        @create (filename, dirname, content, cb) ->
+    write: ({filename, dirname, content}={}, cb) ->
+        @create
+            filename: filename
+            dirname: dirname
+            content: content
+            ,cb
 
     # Create file or directory
-    create: ({filename, dirname, content, cb}) ->
+    create: ({filename, dirname, content}={}, cb) ->
         unless filename or dirname
             throw "Error: Filename or dirname are not set"
 
