@@ -26,8 +26,6 @@
   },
   "homepage": "https://github.com/x42en/Disk_action",
   "dependencies": {
-    "fibers": "^1.0.15",
-    "fibrous": "^0.4.0",
     "mv": "^2.1.1",
     "replace": "^0.3.0",
     "xfs": "^0.1.10"
