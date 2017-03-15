@@ -5,6 +5,7 @@
 [![Downloads per month](https://img.shields.io/npm/dm/disk-action.svg?maxAge=2592000)](https://www.npmjs.org/package/disk-action)
 [![npm version](https://img.shields.io/npm/v/disk-action.svg)](https://www.npmjs.org/package/disk-action)
 [![Build Status](https://travis-ci.org/x42en/Disk_action.svg?branch=master)](https://travis-ci.org/x42en/Disk_action)
+[![Dependencies](https://david-dm.org/x42en/disk-action.svg)](https://www.npmjs.org/package/disk-action)
 
 Easy to use module in order to create / delete / modify files and directory.
 All unexistent directories will be create 'on-the-fly', and delete works for either file or directory. ** BE CAREFUL ** when specifying directory: all content will be erased !!
