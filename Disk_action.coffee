@@ -1,5 +1,5 @@
-# Copyright [2014] 
-# @Email: x62en (at) users (dot) noreply (dot) github (dot) com
+# Copyright [2017] 
+# @Email: x42en (at) users (dot) noreply (dot) github (dot) com
 # @Author: Ben Mz
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,140 +14,181 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-path = require 'path'
-xfs = require 'xfs'
-fs = require('fs')
-mv = require 'node-mv'
+xfs     = require 'xfs'
+path    = require 'path'
+mv      = require 'mv'
 replace = require 'replace'
 
-module.exports = fs.existsSync or (filePath) ->
-  try
-    fs.statSync filePath
-  catch err
-    if err.code == 'ENOENT'
-      return false
-  true
+module.exports = xfs.existsSync or (filePath) ->
+    try
+        xfs.statSync "#{filePath}"
+    catch err
+        return false
+    return true
 
 module.exports = class Disk_action
-	constructor: () ->
+    constructor: (@encoding = 'utf-8') ->
 
-	write: ({filename, dirname, content, cb}) ->
-		if not cb? or typeof cb is "undefined"
-			cb = console.error()
-		if content? and filename?
-			if fs.existsSync "#{filename}"
-				if filename.indexOf '/' > -1
-					pathname = path.dirname filename
-					xfs.mkdir "#{pathname}", (err) =>
-						if err?
-							cb err
-						else
-							xfs.writeFile "#{filename}", content, (err) =>
-								cb err
-				else
-					xfs.writeFile "#{filename}", content, (err) =>
-						cb err
-			else
-				xfs.writeFile "#{filename}", content, (err) =>
-					cb err
-		else if dirname?
-			if fs.existsSync "#{dirname}"
-				fs.mkdir "#{dirname}", (err) =>
-					cb err
-			# If directory exists do nothing
-		else
-			cb 'NOTYPE'
-				
-	append: ({filename, content, cb}) ->
-		if not cb? or typeof cb is "undefined"
-			cb = console.error()
-		if filename? and content? and cb?
-			if fs.existsSync "#{filename}"
-				if fs.lstatSync(filename).isFile()
-					fs.appendFile "#{filename}", "#{content}", (err) =>
-						cb err
-				else
-					cb 'DIREXISTS'
-			else
-				cb 'NOFILE'
-		else
-			cb 'NOARGS'
-	
-	copy: ({source, destination, cb}) ->
-		if not cb? or typeof cb is "undefined"
-			cb = console.error()
-		if source? and destination?
-			if fs.existsSync "#{source}"
-				if fs.lstatSync(source).isFile()
-					fs.createReadStream(source).pipe(fs.createWriteStream(destination))
-					cb()
-				else
-					cb 'DIREXISTS'
-			# if file source does not exists, just write blank dest file
-			else
-				@write
-					filename: destination
-					content: ''
-					cb: cb
-		else
-			cb 'NOARGS'
+    # Read a file
+    read: ({filename, cb}) ->
+        unless filename
+            throw 'Error: filename is not set'
 
-	move: ({source, destination, mkdirp, clobber, cb}) ->
-		if not cb? or typeof cb is "undefined"
-			cb = console.error()
-		# auto create recursive destination files
-		unless mkdirp?
-			mkdirp = true
-		# if dest file exists, return an error
-		unless clobber?
-			clobber = true
+        unless xfs.existsSync filename
+            throw "Error: #{filename} does not exists"
 
-		if source? and destination?
-			if fs.existsSync "#{source}"
-				if fs.lstatSync(source).isFile()
-					mv 'source/file', 'dest/file', {mkdirp: mkdirp, clobber: clobber}, (err) =>
-						cb err
-				else
-					cb 'DIREXISTS'
-			else
-				cb 'NOFILE'
-		else
-			cb 'NOARGS'
-		
+        unless xfs.lstatSync(filename).isFile()
+            throw "Error: #{filename} is a directory"
+        
+        xfs.readFile filename, @encoding, (err, data) ->
+            if err
+                throw err
+            if typeof cb is "function"
+                cb data
 
-	replace: ({filename, to_replace, replace_with, cb}) ->
-		if not cb? or typeof cb is "undefined"
-			cb = console.error()
-		if filename? and to_replace?
-			if fs.existsSync "#{filename}"
-				if fs.lstatSync(filename).isFile()
-					replace
-						regex: to_replace
-						replacement: replace_with
-						paths: [ filename ]
-						recursive: true
-						silent: true
-				else
-					cb 'DIREXISTS'
-			# We don't care about what's going on, as there is no callback on replace
-			cb()
-		else
-			cb 'NOARGS'
+    # Create empty file
+    touch: ({filename}) ->
+        unless filename
+            throw 'Error: filename is not set'
+        
+        @_create
+            filename: filename
+            content: null
 
-	delete: ({filename, cb}) ->
-		if not cb? or typeof cb is "undefined"
-			cb = console.error()
-		if filename?
-			if fs.existsSync "#{filename}"
-				if fs.lstatSync(filename).isDirectory()
-					fs.rmdir filename, (err) =>
-						cb err
-				else
-					fs.unlink filename, (err) =>
-						cb err
-			else
-				cb null
-		else
-			cb 'NOARGS'
-		
+    # Backward compatibility
+    write: ({filename, dirname, content, cb}) ->
+        @create (filename, dirname, content, cb) ->
 
+    # Create file or directory
+    create: ({filename, dirname, content, cb}) ->
+        unless filename or dirname
+            throw "Error: Filename or dirname are not set"
+
+        if filename and dirname
+            throw "Error: You can not set filename AND dirname"
+
+        content = if content then content else ''
+
+        # If we create a directory
+        if dirname
+            # Check if directory does not exists
+            if xfs.existsSync dirname
+                throw "Error: #{dirname} already exists"
+
+            xfs.mkdir dirname, (err) ->
+                if err
+                    throw err
+                if typeof cb is "function"
+                    cb true
+
+        # If we create a file
+        if filename
+            if xfs.existsSync filename
+                throw "Error: #{filename} already exists"
+            
+            # If this file has a proper path
+            if filename.indexOf '/' > -1
+                pathname = path.dirname filename
+                xfs.sync().mkdir pathname
+
+            xfs.writeFile filename, content, (err) ->
+                if err
+                    throw err
+                if typeof cb is "function"
+                    cb true
+    
+    # Add content to a file
+    append: ({filename, content, cb}) ->
+        unless filename
+            throw 'Error: Filename not set'
+
+        unless xfs.existsSync filename
+            throw "Error: #{filename} does not exists"
+
+        unless xfs.lstatSync(filename).isFile()
+            throw "Error: #{filename} is a directory"
+        
+        xfs.appendFile filename, "#{content}", (err) ->
+            if err
+                throw err
+            if typeof cb is "function"
+                cb true
+    
+    # Copy a file
+    copy: ({source, destination, cb}) ->
+        unless source or destination
+            throw 'Source and/or destination not set'
+
+        unless xfs.existsSync source
+            throw "#{source} file does not exists"
+
+        unless xfs.lstatSync(source).isFile()
+            throw "#{source} is a directory"
+        
+        xfs.createReadStream(source).pipe xfs.createWriteStream(destination)
+        if typeof cb is "function"
+            cb true
+
+    # Move a file
+    move: ({source, destination, mkdirp, cb}) ->
+        # auto create recursive destination files
+        mkdirp = if mkdirp then mkdirp else true
+
+        unless source or destination
+            throw 'Source and/or destination not set'
+
+        unless xfs.existsSync source
+            throw "#{source} does not exists"
+
+        if xfs.existsSync destination
+            throw "#{destination} exists"
+
+        mv source, destination, {mkdirp: mkdirp, clobber: false}, (err) ->
+            if err
+                throw err
+            if typeof cb is "function"
+                cb true
+        
+    # Replace string in a file
+    replace: ({filename, to_replace, replace_with, cb}) ->
+        unless filename or to_replace
+            throw 'Source and/or pattern not set'
+
+        unless xfs.existsSync filename
+            throw "#{filename} does not exists"
+
+        unless xfs.lstatSync(filename).isFile()
+            throw "#{filename} is a directory"
+
+        replace
+            regex: to_replace
+            replacement: replace_with
+            paths: [ filename ]
+            recursive: true
+            silent: true
+
+        # We don't care about what's going on, as there is no callback on replace
+        if typeof cb is "function"
+            cb true
+
+    # Delete a file or a directory
+    delete: ({filename, cb}) ->
+        unless filename
+            throw 'filename not set'
+
+        # If filename does not exists
+        unless xfs.existsSync filename
+            throw "#{filename} does not exists"
+
+        # If we are deleting a directory
+        if xfs.lstatSync(filename).isDirectory()
+            act = xfs.rmdir
+        # If we are deleting a file
+        else
+            act = xfs.unlink
+
+        act filename, (err) ->
+            if err
+                throw err
+            if typeof cb is "function"
+                cb true
