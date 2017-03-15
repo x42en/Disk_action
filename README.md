@@ -131,3 +131,10 @@ or:
       cb: (data) ->
         console.log data
   ```
+
+## Run tests
+
+You can run unit-tests using mocha with:
+  ```sh
+    npm test
+  ```
