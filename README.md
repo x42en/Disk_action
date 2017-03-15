@@ -2,7 +2,7 @@
 
 [![NPM](https://nodei.co/npm/disk-action.png?compact=true)](https://nodei.co/npm/disk-action/)
 
-[![Downloads per month](https://img.shields.io/npm/dm/disk-action.svg?maxAge=2592000)][npm-package]
+[![Downloads per month](https://img.shields.io/npm/dm/disk-action.svg?maxAge=2592000)](https://www.npmjs.org/package/disk-action)
 [![npm version](https://img.shields.io/npm/v/disk-action.svg)](https://www.npmjs.org/package/disk-action)
 [![Build Status](https://travis-ci.org/x42en/Disk_action.svg?branch=master)](https://travis-ci.org/x42en/Disk_action)
 
