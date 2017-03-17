@@ -1,5 +1,5 @@
 /****************************************************/
-/*         Disk_action - v0.2.0                     */
+/*         Disk_action - v0.2.1                     */
 /*                                                  */
 /*    Easily interact with FILE SYSTEM in node.js   */
 /****************************************************/
@@ -37,9 +37,9 @@
       this.encoding = encoding != null ? encoding : 'utf-8';
     }
 
-    Disk_action.prototype.read = function(arg) {
-      var cb, filename;
-      filename = arg.filename, cb = arg.cb;
+    Disk_action.prototype.read = function(arg, cb) {
+      var filename;
+      filename = (arg != null ? arg : {}).filename;
       if (!filename) {
         throw 'Error: filename is not set';
       }
@@ -59,27 +59,38 @@
       });
     };
 
-    Disk_action.prototype.touch = function(arg) {
+    Disk_action.prototype.touch = function(arg, cb) {
       var filename;
-      filename = arg.filename;
+      filename = (arg != null ? arg : {}).filename;
       if (!filename) {
         throw 'Error: filename is not set';
+      }
+      if (xfs.lstatSync(filename).isDirectory()) {
+        throw "Error: " + filename + " is a directory";
       }
       return this._create({
         filename: filename,
         content: null
+      }, function(data) {
+        if (typeof cb === "function") {
+          return cb(data);
+        }
       });
     };
 
-    Disk_action.prototype.write = function(arg) {
-      var cb, content, dirname, filename;
-      filename = arg.filename, dirname = arg.dirname, content = arg.content, cb = arg.cb;
-      return this.create(function(filename, dirname, content, cb) {});
+    Disk_action.prototype.write = function(arg, cb) {
+      var content, dirname, filename, ref;
+      ref = arg != null ? arg : {}, filename = ref.filename, dirname = ref.dirname, content = ref.content;
+      return this.create({
+        filename: filename,
+        dirname: dirname,
+        content: content
+      }, cb);
     };
 
-    Disk_action.prototype.create = function(arg) {
-      var cb, content, dirname, filename, pathname;
-      filename = arg.filename, dirname = arg.dirname, content = arg.content, cb = arg.cb;
+    Disk_action.prototype.create = function(arg, cb) {
+      var content, dirname, filename, pathname, ref;
+      ref = arg != null ? arg : {}, filename = ref.filename, dirname = ref.dirname, content = ref.content;
       if (!(filename || dirname)) {
         throw "Error: Filename or dirname are not set";
       }
@@ -119,9 +130,9 @@
       }
     };
 
-    Disk_action.prototype.append = function(arg) {
-      var cb, content, filename;
-      filename = arg.filename, content = arg.content, cb = arg.cb;
+    Disk_action.prototype.append = function(arg, cb) {
+      var content, filename, ref;
+      ref = arg != null ? arg : {}, filename = ref.filename, content = ref.content;
       if (!filename) {
         throw 'Error: Filename not set';
       }
@@ -141,9 +152,9 @@
       });
     };
 
-    Disk_action.prototype.copy = function(arg) {
-      var cb, destination, source;
-      source = arg.source, destination = arg.destination, cb = arg.cb;
+    Disk_action.prototype.copy = function(arg, cb) {
+      var destination, ref, source;
+      ref = arg != null ? arg : {}, source = ref.source, destination = ref.destination;
       if (!(source || destination)) {
         throw 'Source and/or destination not set';
       }
@@ -159,9 +170,9 @@
       }
     };
 
-    Disk_action.prototype.move = function(arg) {
-      var cb, destination, mkdirp, source;
-      source = arg.source, destination = arg.destination, mkdirp = arg.mkdirp, cb = arg.cb;
+    Disk_action.prototype.move = function(arg, cb) {
+      var destination, mkdirp, ref, source;
+      ref = arg != null ? arg : {}, source = ref.source, destination = ref.destination, mkdirp = ref.mkdirp;
       mkdirp = mkdirp ? mkdirp : true;
       if (!(source || destination)) {
         throw 'Source and/or destination not set';
@@ -185,9 +196,9 @@
       });
     };
 
-    Disk_action.prototype.replace = function(arg) {
-      var cb, filename, replace_with, to_replace;
-      filename = arg.filename, to_replace = arg.to_replace, replace_with = arg.replace_with, cb = arg.cb;
+    Disk_action.prototype.replace = function(arg, cb) {
+      var filename, ref, replace_with, to_replace;
+      ref = arg != null ? arg : {}, filename = ref.filename, to_replace = ref.to_replace, replace_with = ref.replace_with;
       if (!(filename || to_replace)) {
         throw 'Source and/or pattern not set';
       }
@@ -209,9 +220,9 @@
       }
     };
 
-    Disk_action.prototype["delete"] = function(arg) {
-      var act, cb, filename;
-      filename = arg.filename, cb = arg.cb;
+    Disk_action.prototype["delete"] = function(arg, cb) {
+      var act, filename;
+      filename = arg.filename;
       if (!filename) {
         throw 'filename not set';
       }

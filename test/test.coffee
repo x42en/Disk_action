@@ -28,7 +28,7 @@ describe 'Disk-Action', ->
                 disk.create
                     filename: FILE
                     content:'Welcome'
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err
@@ -45,7 +45,7 @@ describe 'Disk-Action', ->
             try
                 disk.read
                     filename: FILE
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.string
                         expect(res).to.have.string('Welcome')
                         done()
@@ -58,7 +58,7 @@ describe 'Disk-Action', ->
                 disk.append
                     filename: FILE
                     content: ' in a better place'
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err
@@ -73,7 +73,7 @@ describe 'Disk-Action', ->
                     filename: FILE
                     to_replace: 'place'
                     replace_with: 'world'
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err
@@ -87,7 +87,7 @@ describe 'Disk-Action', ->
                 disk.copy
                     source: FILE
                     destination: "#{FILE}.OLD"
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err
@@ -103,7 +103,7 @@ describe 'Disk-Action', ->
                 disk.move
                     source: "#{FILE}.OLD"
                     destination: "#{FILE}.NEO"
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err
@@ -115,7 +115,6 @@ describe 'Disk-Action', ->
         it "should found #{FILE}.NEO", ->
             expect(file("#{FILE}.NEO")).to.exist
         it "should verify #{DIR} has only #{FILE} and #{FILE}.NEO", ->
-            # expect(dir(DIR)).to.be.a.directory.with.files([FILE,"#{FILE}.NEO"])
             expect(dir(DIR)).to.not.be.empty
         it "should verify #{FILE}.NEO content", ->
             expect(file("#{FILE}.NEO")).to.contain('Welcome in a better world')
@@ -125,7 +124,7 @@ describe 'Disk-Action', ->
             try
                 disk.delete
                     filename: "#{FILE}.NEO"
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err
@@ -142,7 +141,7 @@ describe 'Disk-Action', ->
             try
                 disk.delete
                     filename: "/tmp/directory"
-                    cb: (res) ->
+                    , (res) ->
                         expect(res).to.be.true
                         done()
             catch err

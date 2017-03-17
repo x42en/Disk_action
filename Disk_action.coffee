@@ -30,7 +30,7 @@ module.exports = class Disk_action
     constructor: (@encoding = 'utf-8') ->
 
     # Read a file
-    read: ({filename, cb}={}) ->
+    read: ({filename}={}, cb) ->
         unless filename
             throw 'Error: filename is not set'
 
@@ -47,10 +47,13 @@ module.exports = class Disk_action
                 cb data
 
     # Create empty file
-    touch: ({filename}={}) ->
+    touch: ({filename}={}, cb) ->
         unless filename
             throw 'Error: filename is not set'
-        
+
+        if xfs.lstatSync(filename).isDirectory()
+            throw "Error: #{filename} is a directory"
+
         @_create
             filename: filename
             content: null
@@ -105,7 +108,7 @@ module.exports = class Disk_action
                     cb true
     
     # Add content to a file
-    append: ({filename, content, cb}) ->
+    append: ({filename, content}={}, cb) ->
         unless filename
             throw 'Error: Filename not set'
 
@@ -122,7 +125,7 @@ module.exports = class Disk_action
                 cb true
     
     # Copy a file
-    copy: ({source, destination, cb}) ->
+    copy: ({source, destination}={}, cb) ->
         unless source or destination
             throw 'Source and/or destination not set'
 
@@ -137,7 +140,7 @@ module.exports = class Disk_action
             cb true
 
     # Move a file
-    move: ({source, destination, mkdirp, cb}) ->
+    move: ({source, destination, mkdirp}={}, cb) ->
         # auto create recursive destination files
         mkdirp = if mkdirp then mkdirp else true
 
@@ -157,7 +160,7 @@ module.exports = class Disk_action
                 cb true
         
     # Replace string in a file
-    replace: ({filename, to_replace, replace_with, cb}) ->
+    replace: ({filename, to_replace, replace_with}={}, cb) ->
         unless filename or to_replace
             throw 'Source and/or pattern not set'
 
@@ -179,7 +182,7 @@ module.exports = class Disk_action
             cb true
 
     # Delete a file or a directory
-    delete: ({filename, cb}) ->
+    delete: ({filename}, cb) ->
         unless filename
             throw 'filename not set'
 
