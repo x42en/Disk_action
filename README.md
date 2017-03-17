@@ -36,7 +36,7 @@ Read a file:
   ```coffeescript
     disk.read
       filename: 'directory/not/created/hello.txt'
-      cb: (data) ->
+      , (data) ->
         console.log data
   ```
 
@@ -58,7 +58,7 @@ Read a file:
   ```coffeescript
     disk.read
       filename: 'directory/not/created/hello.txt'
-      cb: (data) ->
+      , (data) ->
         console.log data
   ```
 
@@ -67,7 +67,7 @@ Read a file:
     disk.create
       filename: 'directory/not/created/hello.txt'
       content: 'I like coffee'
-      cb: () ->
+      , () ->
         console.log 'File created'
   ```
 
@@ -127,13 +127,13 @@ All methods supports an optional callback parameter:
     disk.write
       filename: 'directory/not/created/hello.txt'
       content: 'I like coffee'
-      cb: do_something()
+      , callback()
   ```
 or:
   ```coffeescript
     disk.read
       filename: 'directory/not/created/hello.txt'
-      cb: (data) ->
+      , (data) ->
         console.log data
   ```
 
