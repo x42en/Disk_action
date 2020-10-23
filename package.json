@@ -29,7 +29,7 @@
   "homepage": "https://github.com/x42en/Disk_action",
   "dependencies": {
     "mv": "^2.1.1",
-    "replace": "^0.3.0",
+    "replace": "^1.0.0",
     "xfs": "^0.1.10"
   },
   "devDependencies": {
